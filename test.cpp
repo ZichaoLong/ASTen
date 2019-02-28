@@ -8,7 +8,9 @@
 #include<iostream>
 #include<cmath>
 #include<omp.h>
+#ifdef USEATEN
 #include<ATen/ATen.h>
+#endif
 #include "TensorAccessor.h"
 using std::cout; using std::endl; using std::ends;
 
@@ -29,12 +31,15 @@ int main( )
     int strides[] = {M*N,N,1};
     TensorAccessor<double, 3> a(_a, sizes, strides);
     TensorAccessor<double, 3> c(_c, sizes, strides);
+#ifdef USEATEN
     at::Tensor vT = at::ones({L,M,N}, at::kDouble);
     at::Tensor uT = at::ones({L,M,N}, at::kDouble);
     at::TensorAccessor<double,3> v = vT.accessor<double,3>();
     at::TensorAccessor<double,3> u = uT.accessor<double,3>();
+#endif
     double start,end;
     //
+#ifdef USEATEN
     start = omp_get_wtime();
 #pragma omp parallel for schedule(static)
     for (int i=0; i<L; ++i)
@@ -43,6 +48,7 @@ int main( )
                 u[i][j][k] = 1.0/(i+j+k+1);
     end = omp_get_wtime();
     cout << "time for at::TensorAccessor: " << end-start << endl;
+#endif
     //
     start = omp_get_wtime();
 #pragma omp parallel for schedule(static)
@@ -66,6 +72,7 @@ int main( )
         sum += std::abs(__a[i]-__b[i]);
     cout << "err: " << sum << endl;
     //
+#ifdef USEATEN
     start = omp_get_wtime();
 #pragma omp parallel for schedule(static)
     for (int i=1; i<L-1; ++i)
@@ -77,6 +84,7 @@ int main( )
                     -6*u[i][j][k];
     end = omp_get_wtime();
     cout << "laplace for at::TensorAccessor: " << end-start << endl;
+#endif
     //
     start = omp_get_wtime();
 #pragma omp parallel for schedule(static)
