@@ -15,8 +15,8 @@ template<typename T, size_t N, typename index_t=int>
 class TensorAccessorBase
 {
     protected:
-        const index_t* _sizes;
-        const index_t* _strides;
+        const index_t *_sizes;
+        const index_t *_strides;
         T* _data;
     public:
         TensorAccessorBase(
@@ -24,8 +24,8 @@ class TensorAccessorBase
                 const index_t *sizes, 
                 const index_t *strides)
             : _data(data),_sizes(sizes),_strides(strides) {};
-        T data() {return _data;}
-        const T data() const {return _data;}
+        T *data() {return _data;}
+        const T *data() const {return _data;}
         std::vector<index_t> sizes() const {
             return std::vector<index_t>(_sizes, _sizes+N);
         }
