@@ -11,26 +11,30 @@
 #ifdef USEATEN
 #include<ATen/ATen.h>
 #endif
-#include "TensorAccessor.h"
+#include "Tensor.h"
 using std::cout; using std::endl; using std::ends;
 
 
 int main( )
 {
     int L=500,M=500,N=500;
-    std::vector<double> __a(L*M*N);
     std::vector<double> __b(L*M*N);
-    std::vector<double> __c(L*M*N);
     std::vector<double> __d(L*M*N);
     double *b = __b.data();
     double *d = __d.data();
-    double *_a = __a.data();
-    double *_c = __c.data();
     d[0] = 10;
-    int sizes[] = {L,M,N};
-    int strides[] = {M*N,N,1};
-    TensorAccessor<double, 3> a(_a, sizes, strides);
-    TensorAccessor<double, 3> c(_c, sizes, strides);
+    Tensor<double, 3> _a({L,M,N});
+    Tensor<double, 3> _c({L,M,N});
+    cout << "sizes: " << _a.sizes()[0] << " " << 
+        _a.sizes()[1] << " " << 
+        _a.sizes()[2] << endl;
+    cout << "strides: " << _a.strides()[0] << " " << 
+        _a.strides()[1] << " " << 
+        _a.strides()[2] << endl;
+    double *__a = _a.data();
+    double *__c = _c.data();
+    TensorAccessor<double, 3> a = _a.accessor();
+    TensorAccessor<double, 3> c = _c.accessor();
 #ifdef USEATEN
     at::Tensor vT = at::ones({L,M,N}, at::kDouble);
     at::Tensor uT = at::ones({L,M,N}, at::kDouble);
