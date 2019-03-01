@@ -40,6 +40,7 @@ class TensorAccessor: public TensorAccessorBase<T,N,index_t>
     public:
         TensorAccessor(T* data, const index_t* sizes, const index_t* strides)
         : TensorAccessorBase<T,N,index_t>(data, sizes, strides){}
+
         TensorAccessor<T, N-1,index_t> operator[](index_t i) {
             return TensorAccessor<T,N-1,index_t>(this->_data + this->_strides[0]*i,
                     this->_sizes+1,this->_strides+1);
@@ -48,6 +49,11 @@ class TensorAccessor: public TensorAccessorBase<T,N,index_t>
             return TensorAccessor<T,N-1,index_t>(this->_data + this->_strides[0]*i,
                     this->_sizes+1,this->_strides+1);
         }
+
+        inline void fill_(const T &v) {
+            for (index_t i=0; i<this->_sizes[0]; ++i)
+                this->operator[](i).fill_(v);
+        };
 };
 
 template<typename T, typename index_t>
@@ -56,11 +62,22 @@ class TensorAccessor<T,1,index_t>: public TensorAccessorBase<T,1,index_t>
     public:
         TensorAccessor(T* data, const index_t* sizes, const index_t* strides)
         : TensorAccessorBase<T,1,index_t>(data, sizes, strides){}
+
         T & operator[](index_t i) {
             return this->_data[this->_strides[0]*i];
         }
         const T & operator[](index_t i) const {
             return this->_data[this->_strides[0]*i];
+        }
+
+        inline void fill_(const T &v) {
+            if (this->_strides[0] == 1)
+            {
+                std::fill(this->_data, this->_data+this->_sizes[0], v);
+                return;
+            }
+            for (index_t i=0; i<this->_sizes[0]; i += this->_strides[0])
+                *(this->_data+i) = v;
         }
 };
 
