@@ -32,13 +32,12 @@ int set_index(int L, int M, int N, double *in,
 int main(int argc, char* argv[])
 {
     int L,M,N;
-    if (argc<2) 
+    if (argc<4) 
     {
         L=500; M=500; N=500;
     }
     else 
     {
-        assert(argc>3);
         L = atoi(argv[1]);
         M = atoi(argv[2]);
         N = atoi(argv[3]);

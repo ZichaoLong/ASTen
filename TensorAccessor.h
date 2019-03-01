@@ -3,7 +3,8 @@
   > Author: Long Zichao
   > Mail: zlong@pku.edu.cn
   > Created Time: 2019-02-28
-NOTICE: This file is based on TensorAccessor of ATen
+NOTICE: This file is based on TensorAccessor of ATen, see:
+https://github.com/zdevito/ATen
  ************************************************************************/
 
 #ifndef TENSORACCESSOR_H
