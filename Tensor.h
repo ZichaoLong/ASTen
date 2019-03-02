@@ -10,6 +10,7 @@
 
 #include<memory>
 #include<vector>
+#include<omp.h>
 #include "TensorAccessor.h"
 
 // A no-initialization allocator from:
@@ -77,11 +78,17 @@ class Tensor
         int view_as_continuous();
         int dim() {return _dim;}
         void fill_(T v) {
-            this->accessor().fill_(v);
+#pragma omp parallel for schedule(static)
+            for (index_t i=0; i<sizes()[0]; ++i)
+                this->accessor().operator[](i).fill_(v);
         }
         template<typename T_, typename index_t_=int>
         void copy_(const Tensor<T_,N,index_t_> &another) {
-            this->accessor().copy_(another.accessor());
+            index_t I = std::min(sizes()[0], (index_t) another.sizes()[0]);
+#pragma omp parallel for schedule(static)
+            for (index_t i=0; i<I; ++i)
+                this->accessor().operator[](i).copy_(
+                        another.accessor().operator[](i));
         }
 };
 template<typename T, size_t N, typename index_t>
