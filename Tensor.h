@@ -79,6 +79,10 @@ class Tensor
         void fill_(T v) {
             this->accessor().fill_(v);
         }
+        template<typename T_, typename index_t_=int>
+        void copy_(const Tensor<T_,N,index_t_> &another) {
+            this->accessor().copy_(another.accessor());
+        }
 };
 template<typename T, size_t N, typename index_t>
 int Tensor<T,N,index_t>::view_as_continuous()

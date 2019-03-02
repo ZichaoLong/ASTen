@@ -48,18 +48,18 @@ int main(int argc, char* argv[])
     if (flag)
     {
     clock_gettime(CLOCK_MONOTONIC, &start);
-    Tensor<double, 3> aT({L,M,N});
-    Tensor<double, 3> cT({L,M,N});
+    Tensor<double,3> aT({L,M,N});
+    Tensor<double,3> cT({L,M,N});
     clock_gettime(CLOCK_MONOTONIC, &end);
     cout << "time for Tensor construct: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
-    TensorAccessor<double, 3> a = aT.accessor();
-    TensorAccessor<double, 3> c = cT.accessor();
+    TensorAccessor<double,3> a = aT.accessor();
+    TensorAccessor<double,3> c = cT.accessor();
     clock_gettime(CLOCK_MONOTONIC, &start);
     aT.fill_(1.1);
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "time for Tensor initialize: " << 
+    cout << "time for Tensor.fill: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     for (int i=0; i<c.sizes()[0]; ++i)
         c[i].fill_(1.2);
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "time for TensorAccessor initialize: " << 
+    cout << "time for (OMP) TensorAccessor.fill: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     cout << "initial value " << a[100][100][100] << " " << c[100][100][100] 
@@ -83,8 +83,38 @@ int main(int argc, char* argv[])
             for (int k=0; k<N; ++k)
                 a[i][j][k] = 1.0/(i+j+k+1);
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "time for TensorAccessor: " << 
+    cout << "time for (OMP) TensorAccessor: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
+        << endl;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    cT.copy_(aT);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    cout << "time for Tensor.copy: " << 
+        (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
+        << endl << "copy test: " << c[50][50][50] - a[50][50][50] 
+        << endl;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+    for (int i=0; i<L; ++i)
+        for (int j=0; j<M; ++j)
+            for (int k=0; k<N; ++k)
+                c[i][j][k] = a[i][j][k];
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    cout << "time for (OMP) element TensorAccessor copy: " << 
+        (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
+        << endl << "copy test: " << c[50][50][50] - a[50][50][50] 
+        << endl;
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+    for (int i=0; i<L; ++i)
+                c[i].copy_(a[i]);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    cout << "time for (OMP) TensorAccessor.copy: " << 
+        (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
+        << endl << "copy test: " << c[50][50][50] - a[50][50][50] 
         << endl;
     clock_gettime(CLOCK_MONOTONIC, &start);
 #ifdef _OPENMP
@@ -98,7 +128,7 @@ int main(int argc, char* argv[])
                     +a[i][j][k+1]+a[i][j][k-1]
                     -6*a[i][j][k];
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "laplace for TensorAccessor: " << 
+    cout << "laplace for (OMP) TensorAccessor: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     cout << "sizes: " << aT.sizes()[0] << " " << 
@@ -132,7 +162,7 @@ int main(int argc, char* argv[])
             for (int k=0; k<N; ++k)
                 u[i][j][k] = 1.0/(i+j+k+1);
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "time for at::TensorAccessor: " << 
+    cout << "time for (OMP) at::TensorAccessor: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -147,7 +177,7 @@ int main(int argc, char* argv[])
                     +u[i][j][k+1]+u[i][j][k-1]
                     -6*u[i][j][k];
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "laplace for at::TensorAccessor: " << 
+    cout << "laplace for (OMP) at::TensorAccessor: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     cout << endl;
@@ -174,7 +204,7 @@ int main(int argc, char* argv[])
             for (int k=0; k<N; ++k)
                 b[(i*M+j)*N+k] = 1.1;
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "time for naive array initialize: " << 
+    cout << "time for (OMP) naive array fill: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -186,7 +216,7 @@ int main(int argc, char* argv[])
             for (int k=0; k<N; ++k)
                 b[(i*M+j)*N+k] = 1.0/(i+j+k+1);
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "time for naive array: " << 
+    cout << "time for (OMP) naive array: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -201,7 +231,7 @@ int main(int argc, char* argv[])
                     +b[(i*M+j)*N+k+1]+b[(i*M+j)*N+k-1]
                     -6*b[(i*M+j)*N+k];
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "laplace for naive array: " << 
+    cout << "laplace for (OMP) naive array: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     cout << endl;
@@ -229,7 +259,7 @@ int main(int argc, char* argv[])
             for (int k=0; k<N; ++k)
                 a[i][j][k] = 1.0/(i+j+k+1);
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "time for vectorAccessor: " << 
+    cout << "time for (OMP) vectorAccessor: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -244,7 +274,7 @@ int main(int argc, char* argv[])
                     +a[i][j][k+1]+a[i][j][k-1]
                     -6*a[i][j][k];
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "laplace for vectorAccessor: " << 
+    cout << "laplace for (OMP) vectorAccessor: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
     cout << endl;

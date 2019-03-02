@@ -20,8 +20,7 @@ CXXFLAGS=-std=c++11 -O3 -fPIC $(OMPFLAG)
 BINNAME=main
 .PHONY:all obj bin clean
 all:obj bin
-obj:test.o
-test.o:test.cpp
+obj:
 ifeq ($(USEATEN), -DUSEATEN)
 	g++ -c test.cpp -o test.o $(CXXFLAGS) $(USEATEN) $(ATEN_CXXFLAGS)
 else

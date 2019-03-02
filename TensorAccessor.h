@@ -55,6 +55,12 @@ class TensorAccessor: public TensorAccessorBase<T,N,index_t>
             for (index_t i=0; i<this->_sizes[0]; ++i)
                 this->operator[](i).fill_(v);
         };
+        template<typename T_, typename index_t_=int>
+        inline void copy_(const TensorAccessor<T_,N,index_t_> &another) {
+            index_t I = std::min(this->_sizes[0], another.sizes()[0]);
+            for (index_t i=0; i<I; ++i)
+                operator[](i).copy_(another[i]);
+        };
 };
 
 template<typename T, typename index_t>
@@ -72,14 +78,15 @@ class TensorAccessor<T,1,index_t>: public TensorAccessorBase<T,1,index_t>
         }
 
         inline void fill_(const T &v) {
-            if (this->_strides[0] == 1)
-            {
-                std::fill(this->_data, this->_data+this->_sizes[0], v);
-                return;
-            }
-            for (index_t i=0; i<this->_sizes[0]; i += this->_strides[0])
-                *(this->_data+i) = v;
+            for (index_t i=0; i<this->_sizes[0]; ++i)
+                operator[](i) = v;
         }
+        template<typename T_, typename index_t_=int>
+        inline void copy_(const TensorAccessor<T_,1,index_t_> &another) {
+            index_t I = std::min(this->_sizes[0], another.sizes()[0]);
+            for (index_t i=0; i<I; ++i)
+                operator[](i) = another[i];
+        };
 };
 
 #endif // TENSORACCESSOR_H
