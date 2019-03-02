@@ -8,6 +8,7 @@
 #include<iostream>
 #include<cmath>
 #include<ctime>
+#include<cassert>
 #ifdef USEATEN
 #include<ATen/ATen.h>
 #endif
@@ -108,6 +109,29 @@ int main(int argc, char* argv[])
 // test TensorAccessor
     if (flag)
     {
+    Tensor<double,1> bT({10});
+    Tensor<double,1> dT({10});
+    TensorAccessor<double,1> b = bT.accessor();
+    TensorAccessor<double,1> d = dT.accessor();
+    bT.fill_(1.3);
+    for (int i=0; i<b.sizes()[0]; ++i)
+        assert(b[i] == 1.3);
+    cout << "1.3 == " << b[b.sizes()[0]-1]
+        << " " << b[b.sizes()[0]] 
+        << endl;
+    b.fill_(0.9);
+    for (int i=0; i<b.sizes()[0]; ++i)
+        assert(b[i] == 0.9);
+    cout << "0.9 == " << b[b.sizes()[0]-1]
+        << " " << b[b.sizes()[0]] 
+        << endl;
+    dT.copy_(bT);
+    for (int i=0; i<b.sizes()[0]; ++i)
+        assert(d[i] == 0.9);
+    bT.fill_(1.3);
+    d.copy_(b);
+    for (int i=0; i<b.sizes()[0]; ++i)
+        assert(d[i] == 1.3);
     // Tensor construct
     clock_gettime(CLOCK_MONOTONIC, &start);
     Tensor<double,3> aT({L,M,N});
@@ -133,7 +157,6 @@ int main(int argc, char* argv[])
     clock_gettime(CLOCK_MONOTONIC, &end);
     cout << "(OMP) TensorAccessor.fill: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
-        << " initial value " << a[100][100][100] << " " << c[100][100][100] 
         << endl;
     // (OMP) TensorAccessor initialize
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -152,7 +175,6 @@ int main(int argc, char* argv[])
     clock_gettime(CLOCK_MONOTONIC, &end);
     cout << "Tensor.copy: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
-        << " copy test: " << c[50][50][50] - a[50][50][50] 
         << endl;
     // (OMP) TensorAccessor.copy
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -162,7 +184,6 @@ int main(int argc, char* argv[])
     clock_gettime(CLOCK_MONOTONIC, &end);
     cout << "(OMP) TensorAccessor.copy: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
-        << endl << " copy test: " << c[50][50][50] - a[50][50][50] 
         << endl;
     // (OMP) element TensorAccessor.copy
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -174,7 +195,6 @@ int main(int argc, char* argv[])
     clock_gettime(CLOCK_MONOTONIC, &end);
     cout << "(OMP) element TensorAccessor copy: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
-        << " copy test: " << c[50][50][50] - a[50][50][50] 
         << endl;
     // (OMP) TensorAccessor laplace
     clock_gettime(CLOCK_MONOTONIC, &start);

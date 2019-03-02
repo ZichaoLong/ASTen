@@ -41,23 +41,24 @@ class default_init_allocator : public A {
         }
 };
 
-
+// declaration
+// TensorBase<T,N,index_t>
 template<typename T, size_t N, typename index_t=int>
-class Tensor
+class TensorBase
 {
-    private:
+    protected:
         const int _dim;
         std::vector<index_t> _sizes;
         std::vector<index_t> _strides;
         std::vector<T,default_init_allocator<T>> _data_vector;
         T *_data;
     public:
-        Tensor(T *data, const index_t *sizes, const index_t *strides)
+        TensorBase(T *data, const index_t *sizes, const index_t *strides)
             : _dim(N),_data(data),
             _sizes(sizes,sizes+N),
             _strides(strides,strides+N) {};
-        Tensor(T *data, const std::vector<index_t> sizes);
-        Tensor(const std::vector<index_t> sizes);
+        TensorBase(T *data, const std::vector<index_t> sizes);
+        TensorBase(const std::vector<index_t> sizes);
 
         TensorAccessor<T,N,index_t> accessor() const& {
             return TensorAccessor<T,N,index_t>(
@@ -76,27 +77,61 @@ class Tensor
         }
         int view_as_continuous();
         int dim() {return _dim;}
-        void fill_(T v);
-        template<typename T_, typename index_t_=int>
-        void copy_(const Tensor<T_,N,index_t_> &another);
 };
+
+// declaration
+// Tensor<T,N,index_t> and Tensor<T,1,index_t>
+template<typename T, size_t N, typename index_t=int>
+class Tensor : public TensorBase<T,N,index_t>
+{
+    public:
+        Tensor(T *data, const index_t *sizes, const index_t *strides)
+            : TensorBase<T,N,index_t>(data, sizes, strides) {};
+        Tensor(T *data, const std::vector<index_t> sizes)
+            : TensorBase<T,N,index_t>(data, sizes) {};
+        Tensor(const std::vector<index_t> sizes)
+            : TensorBase<T,N,index_t>(sizes) {};
+
+        void fill_(T v);
+        template<typename T_, typename index_t_>
+            void copy_(const Tensor<T_,N,index_t_> &another);
+};
+template<typename T, typename index_t>
+class Tensor<T,1,index_t> : public TensorBase<T,1,index_t>
+{
+    public:
+        Tensor(T *data, const index_t *sizes, const index_t *strides)
+            : TensorBase<T,1,index_t>(data, sizes, strides) {};
+        Tensor(T *data, const std::vector<index_t> sizes)
+            : TensorBase<T,1,index_t>(data, sizes) {};
+        Tensor(const std::vector<index_t> sizes)
+            : TensorBase<T,1,index_t>(sizes) {};
+
+        void fill_(T v);
+        template<typename T_, typename index_t_>
+            void copy_(const Tensor<T_,1,index_t_> &another);
+};
+
+
+// definition
+// TensorBase<T,N,index_t> constructor
 template<typename T, size_t N, typename index_t>
-int Tensor<T,N,index_t>::view_as_continuous()
+int TensorBase<T,N,index_t>::view_as_continuous()
 {
     _strides.resize(N);
     _strides[N-1] = 1;
-    for (int i=N-2; i>-1; --i)
+    for (int i=(int)N-2; i>-1; --i)
         _strides[i] = _strides[i+1]*_sizes[i+1];
     return 0;
 }
 template<typename T, size_t N, typename index_t>
-Tensor<T,N,index_t>::Tensor(T *data, const std::vector<index_t> sizes)
+TensorBase<T,N,index_t>::TensorBase(T *data, const std::vector<index_t> sizes)
     : _dim(N),_data(data),_sizes(sizes)
 {
     view_as_continuous();
 }
 template<typename T, size_t N, typename index_t>
-Tensor<T,N,index_t>::Tensor(const std::vector<index_t> sizes)
+TensorBase<T,N,index_t>::TensorBase(const std::vector<index_t> sizes)
     : _dim(N)
 {
     _sizes = sizes;
@@ -109,30 +144,43 @@ Tensor<T,N,index_t>::Tensor(const std::vector<index_t> sizes)
     _data = _data_vector.data();
 }
 
+
+// definition
+// Tensor<T,N,index_t> and Tensor<T,1,index_t> utils
 template<typename T, size_t N, typename index_t>
 void Tensor<T,N,index_t>::fill_(T v)
 {
 #pragma omp parallel for
-    for (index_t i=0; i<sizes()[0]; ++i)
+    for (index_t i=0; i<this->_sizes[0]; ++i)
         this->accessor().operator[](i).fill_(v);
 }
-
 template<typename T, size_t N, typename index_t>
 template<typename T_, typename index_t_>
 void Tensor<T,N,index_t>::copy_(
         const Tensor<T_,N,index_t_> &another)
 {
-    index_t I = std::min(sizes()[0], (index_t) another.sizes()[0]);
-    if (N == 1)
-    {
-#pragma omp parallel for
-        for (index_t i=0; i<I; ++i)
-            _data[i*_strides[0]] = another._data[i*another._strides[0]];
-        return;
-    }
+    index_t I = std::min(this->_sizes[0], (index_t) another._sizes[0]);
 #pragma omp parallel for
     for (index_t i=0; i<I; ++i)
         this->accessor().operator[](i).copy_(
                 another.accessor().operator[](i));
+}
+
+template<typename T, typename index_t>
+void Tensor<T,1,index_t>::fill_(T v)
+{
+#pragma omp parallel for
+    for (index_t i=0; i<this->_sizes[0]; ++i)
+        this->_data[i*this->_strides[0]] = v;
+}
+template<typename T, typename index_t>
+template<typename T_, typename index_t_>
+void Tensor<T,1,index_t>::copy_(
+        const Tensor<T_,1,index_t_> &another)
+{
+    index_t I = std::min(this->_sizes[0], (index_t) another._sizes[0]);
+#pragma omp parallel for
+    for (index_t i=0; i<I; ++i)
+        this->_data[i*this->_strides[0]] = another._data[i*another._strides[0]];
 }
 #endif // TENSOR_H
