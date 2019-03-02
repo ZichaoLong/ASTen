@@ -10,7 +10,6 @@
 
 #include<memory>
 #include<vector>
-#include<omp.h>
 #include "TensorAccessor.h"
 
 // A no-initialization allocator from:
@@ -77,19 +76,9 @@ class Tensor
         }
         int view_as_continuous();
         int dim() {return _dim;}
-        void fill_(T v) {
-#pragma omp parallel for schedule(static)
-            for (index_t i=0; i<sizes()[0]; ++i)
-                this->accessor().operator[](i).fill_(v);
-        }
+        void fill_(T v);
         template<typename T_, typename index_t_=int>
-        void copy_(const Tensor<T_,N,index_t_> &another) {
-            index_t I = std::min(sizes()[0], (index_t) another.sizes()[0]);
-#pragma omp parallel for schedule(static)
-            for (index_t i=0; i<I; ++i)
-                this->accessor().operator[](i).copy_(
-                        another.accessor().operator[](i));
-        }
+        void copy_(const Tensor<T_,N,index_t_> &another);
 };
 template<typename T, size_t N, typename index_t>
 int Tensor<T,N,index_t>::view_as_continuous()
@@ -120,5 +109,30 @@ Tensor<T,N,index_t>::Tensor(const std::vector<index_t> sizes)
     _data = _data_vector.data();
 }
 
+template<typename T, size_t N, typename index_t>
+void Tensor<T,N,index_t>::fill_(T v)
+{
+#pragma omp parallel for
+    for (index_t i=0; i<sizes()[0]; ++i)
+        this->accessor().operator[](i).fill_(v);
+}
 
+template<typename T, size_t N, typename index_t>
+template<typename T_, typename index_t_>
+void Tensor<T,N,index_t>::copy_(
+        const Tensor<T_,N,index_t_> &another)
+{
+    index_t I = std::min(sizes()[0], (index_t) another.sizes()[0]);
+    if (N == 1)
+    {
+#pragma omp parallel for
+        for (index_t i=0; i<I; ++i)
+            _data[i*_strides[0]] = another._data[i*another._strides[0]];
+        return;
+    }
+#pragma omp parallel for
+    for (index_t i=0; i<I; ++i)
+        this->accessor().operator[](i).copy_(
+                another.accessor().operator[](i));
+}
 #endif // TENSOR_H
