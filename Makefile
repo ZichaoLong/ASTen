@@ -22,15 +22,15 @@ BINNAME=main
 all:obj bin
 obj:
 ifeq ($(USEATEN), -DUSEATEN)
-	g++ -c test.cpp -o test.o $(CXXFLAGS) $(USEATEN) $(ATEN_CXXFLAGS)
+	$(CC) -c test.cpp -o test.o $(CXXFLAGS) $(USEATEN) $(ATEN_CXXFLAGS)
 else
-	g++ -c test.cpp -o test.o $(CXXFLAGS)
+	$(CC) -c test.cpp -o test.o $(CXXFLAGS)
 endif
 bin:obj
 ifeq ($(USEATEN), -DUSEATEN)
-	g++ test.o -o $(BINNAME) $(OMPFLAG) $(ATEN_LDFLAGS) $(ATEN_LIBRARY_FLAGS)
+	$(CC) test.o -o $(BINNAME) $(OMPFLAG) $(ATEN_LDFLAGS) $(ATEN_LIBRARY_FLAGS)
 else
-	g++ test.o -o $(BINNAME) $(OMPFLAG)
+	$(CC) test.o -o $(BINNAME) $(OMPFLAG)
 endif
 clean:
 	-rm -rf $(BINNAME) test.o
