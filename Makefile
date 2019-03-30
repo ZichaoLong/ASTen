@@ -34,3 +34,4 @@ else
 endif
 clean:
 	-rm -rf $(BINNAME) test.o
+	-rm -rf log [0-4]
