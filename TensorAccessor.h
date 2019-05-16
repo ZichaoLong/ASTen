@@ -18,7 +18,7 @@ class TensorAccessorBase
     protected:
         const index_t *_sizes;
         const index_t *_strides;
-        T* _data;
+        T *_data;
     public:
         TensorAccessorBase(
                 T *data, 
@@ -39,7 +39,7 @@ template<typename T, size_t N, typename index_t=int>
 class TensorAccessor: public TensorAccessorBase<T,N,index_t>
 {
     public:
-        TensorAccessor(T* data, const index_t* sizes, const index_t* strides)
+        TensorAccessor(T *data, const index_t *sizes, const index_t *strides)
         : TensorAccessorBase<T,N,index_t>(data, sizes, strides){}
 
         TensorAccessor<T, N-1,index_t> operator[](index_t i) {
@@ -67,7 +67,7 @@ template<typename T, typename index_t>
 class TensorAccessor<T,1,index_t>: public TensorAccessorBase<T,1,index_t>
 {
     public:
-        TensorAccessor(T* data, const index_t* sizes, const index_t* strides)
+        TensorAccessor(T *data, const index_t *sizes, const index_t *strides)
         : TensorAccessorBase<T,1,index_t>(data, sizes, strides){}
 
         T & operator[](index_t i) {
