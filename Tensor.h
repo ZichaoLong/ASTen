@@ -48,10 +48,10 @@ class TensorBase
 {
     protected:
         const int _dim;
+        T *_data;
         std::vector<index_t> _sizes;
         std::vector<index_t> _strides;
         std::vector<T,default_init_allocator<T>> _data_vector;
-        T *_data;
     public:
         TensorBase(T *data, const index_t *sizes, const index_t *strides)
             : _dim(N),_data(data),
@@ -137,7 +137,7 @@ TensorBase<T,N,index_t>::TensorBase(const std::vector<index_t> sizes)
     _sizes = sizes;
     view_as_continuous();
     size_t L = 1;
-    for (int i=0; i<N; ++i)
+    for (size_t i=0; i<N; ++i)
         L *= _sizes[i];
     _data_vector.resize(L);
     _data_vector.shrink_to_fit();

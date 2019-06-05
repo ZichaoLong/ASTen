@@ -16,9 +16,9 @@ template<typename T, size_t N, typename index_t=int>
 class TensorAccessorBase
 {
     protected:
+        T *_data;
         const index_t *_sizes;
         const index_t *_strides;
-        T *_data;
     public:
         TensorAccessorBase(
                 T *data, 
