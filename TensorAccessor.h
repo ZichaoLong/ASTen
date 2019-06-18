@@ -33,12 +33,18 @@ class TensorAccessorBase
         std::vector<index_t> strides() const {
             return std::vector<index_t>(_strides, _strides+N);
         }
+        TensorAccessorBase<const T,N,index_t> ConstAccessor() {
+            const T *_data0 = _data;
+            return TensorAccessorBase<const T,N,index_t>(_data0, _sizes, _strides);
+        }
 };
 
 template<typename T, size_t N, typename index_t=int>
 class TensorAccessor: public TensorAccessorBase<T,N,index_t>
 {
     public:
+        TensorAccessor(TensorAccessorBase<T,N,index_t> TB)
+        : TensorAccessorBase<T,N,index_t>(TB){}
         TensorAccessor(T *data, const index_t *sizes, const index_t *strides)
         : TensorAccessorBase<T,N,index_t>(data, sizes, strides){}
 
@@ -67,6 +73,8 @@ template<typename T, typename index_t>
 class TensorAccessor<T,1,index_t>: public TensorAccessorBase<T,1,index_t>
 {
     public:
+        TensorAccessor(TensorAccessorBase<T,1,index_t> TB)
+        : TensorAccessorBase<T,1,index_t>(TB){}
         TensorAccessor(T *data, const index_t *sizes, const index_t *strides)
         : TensorAccessorBase<T,1,index_t>(data, sizes, strides){}
 

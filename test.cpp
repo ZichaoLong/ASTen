@@ -142,10 +142,13 @@ int main(int argc, char* argv[])
         << endl;
     TensorAccessor<double,3> a = aT.accessor();
     TensorAccessor<double,3> c = cT.accessor();
+    TensorAccessor<const double,3> aConst = a.ConstAccessor();
+    cout << "aConst[0][0][0] before fill_(1.1) " << aConst[0][0][0] << endl;
     // Tensor.fill
     clock_gettime(CLOCK_MONOTONIC, &start);
     aT.fill_(1.1);
     clock_gettime(CLOCK_MONOTONIC, &end);
+    cout << "aConst[0][0][0] after fill_(1.1) " << aConst[0][0][0] << endl;
     cout << "Tensor.fill: " << 
         (double)((end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)*1e-9) 
         << endl;
