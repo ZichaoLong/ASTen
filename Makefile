@@ -18,7 +18,7 @@ ATEN_LIBRARY_PATH=$(shell python -c \
 ANACONDALIBROOT=$(shell python -c \
 				"import sysconfig; \
 				print(sysconfig.get_config_vars()['LIBDIR'])")
-ATEN_LDFLAGS=-L$(ATEN_LIBRARY_PATH) -L$(ANACONDALIBROOT) -lcaffe2 -lc10 \
+ATEN_LDFLAGS=-L$(ATEN_LIBRARY_PATH) -L$(ANACONDALIBROOT) -ltorch -lc10 \
 			 -Wl,--no-as-needed -Wl,-rpath=$(ATEN_LIBRARY_PATH) -Wl,-rpath=$(ANACONDALIBROOT) 
 
 
